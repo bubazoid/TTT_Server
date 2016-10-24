@@ -7,21 +7,20 @@ import io.netty.channel.group.DefaultChannelGroup;
 import io.netty.util.concurrent.GlobalEventExecutor;
 
 /**
- * Created by Sergey on 20.10.2016.
+ * Created by Sergey on 21.10.2016.
  */
 public class ServerHandler extends ChannelInboundHandlerAdapter {
     private static final ChannelGroup channels = new DefaultChannelGroup(GlobalEventExecutor.INSTANCE);
-
 
     @Override
     public void handlerAdded(ChannelHandlerContext ctx) throws Exception {
         System.out.println("New player joined");
         channels.add(ctx.channel());
+        sendPackage(ctx.channel(), new Package("Hello new player"), false);
         Game game = GameController.addNewPlayer(ctx.channel().id());
         if (game != null) {
             startNewGame(game);
         }
-        sendPackage(ctx.channel(), new Package("Hello new player"),false);
     }
 
     @Override
@@ -43,7 +42,7 @@ public class ServerHandler extends ChannelInboundHandlerAdapter {
     }
 
     @Override
-    public void channelRead(ChannelHandlerContext ctx, Object msg){
+    public void channelRead(ChannelHandlerContext ctx, Object msg) {
         Package pack = (Package) msg;
         switch (pack.getType()) {
             case Package.STEP:
@@ -55,7 +54,7 @@ public class ServerHandler extends ChannelInboundHandlerAdapter {
         }
     }
 
-    private void step(ChannelHandlerContext ctx, Package pack){
+    private void step(ChannelHandlerContext ctx, Package pack) {
         Game game;
         Channel opponentChannel;
         game = GameController.findGame(ctx.channel().id());
@@ -65,30 +64,29 @@ public class ServerHandler extends ChannelInboundHandlerAdapter {
                 if (opponentId != null) {
                     opponentChannel = getChannelById(opponentId);
                     if (opponentChannel != null) {
-                        sendPackage(opponentChannel,new Package(Package.STEP, pack.getStep()),true);
-//                        opponentChannel.writeAndFlush(new Package(Package.STEP, pack.getStep())).sync();
+                        sendPackage(opponentChannel, new Package(Package.STEP, pack.getStep()), true);
                         switch (game.getStatus()) {
                             case Logic.DRAW:
                                 Package answer = new Package(Package.CLOSE_GAME, "Ничья");
-                                sendPackage(opponentChannel,answer,false);
-                                sendPackage(ctx.channel(),answer,false);
+                                sendPackage(opponentChannel, answer, false);
+                                sendPackage(ctx.channel(), answer, false);
                                 break;
                             case Logic.NEXT:
-                                sendPackage(opponentChannel,new Package(Package.YOUR_STEP),false);
+                                sendPackage(opponentChannel, new Package(Package.YOUR_STEP), false);
                                 break;
                             case Logic.WIN:
-                                sendPackage(opponentChannel,new Package(Package.CLOSE_GAME, "Вы проиграли"),false);
-                                sendPackage(ctx.channel(),new Package(Package.CLOSE_GAME, "Вы выиграли"),false);
+                                sendPackage(opponentChannel, new Package(Package.CLOSE_GAME, "Вы проиграли"), false);
+                                sendPackage(ctx.channel(), new Package(Package.CLOSE_GAME, "Вы выиграли"), false);
                                 break;
                         }
                     }
                 }
             }
-
         }
     }
-    private void sendPackage(Channel channel, Package pack, boolean sync){
-        if (sync){
+
+    private void sendPackage(Channel channel, Package pack, boolean sync) {
+        if (sync) {
             try {
                 channel.writeAndFlush(pack).sync();
             } catch (InterruptedException e) {
@@ -98,6 +96,7 @@ public class ServerHandler extends ChannelInboundHandlerAdapter {
             channel.writeAndFlush(pack);
         }
     }
+
     private void closeGame(Channel channel) {
         Game game = GameController.findGame(channel.id());
         if (game != null) {
@@ -107,7 +106,7 @@ public class ServerHandler extends ChannelInboundHandlerAdapter {
             {
                 Channel opponentChannel = getChannelById(opponentId);
                 if (opponentChannel != null) {
-                    sendPackage(opponentChannel,new Package(Package.CLOSE_GAME, "Соперник вышел"),true);
+                    sendPackage(opponentChannel, new Package(Package.CLOSE_GAME, "Соперник вышел"), true);
                     closeChannel(channel);
                     closeChannel(opponentChannel);
                 }
@@ -136,7 +135,6 @@ public class ServerHandler extends ChannelInboundHandlerAdapter {
 
     @Override
     public void exceptionCaught(ChannelHandlerContext ctx, Throwable cause) {
-        cause.printStackTrace();
-        ctx.close();
+        closeChannel(ctx.channel());
     }
 }

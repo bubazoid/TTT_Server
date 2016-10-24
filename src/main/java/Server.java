@@ -12,7 +12,7 @@ import io.netty.handler.logging.LogLevel;
 import io.netty.handler.logging.LoggingHandler;
 
 /**
- * Created by Sergey on 20.10.2016.
+ * Created by Sergey on 21.10.2016.
  */
 public class Server {
 
@@ -36,12 +36,10 @@ public class Server {
                                     new ServerHandler());
                         }
                     });
-
-            // Bind and start to accept incoming connections.
             b.bind(port).sync().channel().closeFuture().sync();
         } finally {
             bossGroup.shutdownGracefully();
             workerGroup.shutdownGracefully();
         }
-}
+    }
 }

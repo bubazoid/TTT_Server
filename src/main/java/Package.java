@@ -1,7 +1,7 @@
 /**
  * Created by Sergey on 20.10.2016.
  */
-public class Package extends Object implements java.io.Serializable{
+public class Package implements java.io.Serializable {
     public static final int MESSAGE = 1;
     public static final int STEP = 2;
     public static final int CLOSE_GAME = 3;
@@ -14,24 +14,26 @@ public class Package extends Object implements java.io.Serializable{
         type = MESSAGE;
         this.message = message;
     }
-    public Package(int type,String message) {
+
+    public Package(int type, String message) {
         this.type = type;
         this.message = message;
     }
 
-    public Package(int type,int step) {
+    public Package(int type, int step) {
         this.type = type;
         this.step = step;
     }
+
     public Package(int type) {
         this.type = type;
     }
 
 
-
     public String getMessage() {
         return message;
     }
+
     @Override
     public String toString() {
         return message;
